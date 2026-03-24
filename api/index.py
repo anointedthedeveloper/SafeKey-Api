@@ -1,13 +1,14 @@
 import logging
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from fastapi import FastAPI, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-import sys
-import os
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.generator import generate_password, calculate_strength
 from utils.validator import validate_params
@@ -41,12 +42,9 @@ def generate(
     count: int = Query(default=1),
 ):
     validate_params(length, uppercase, lowercase, numbers, symbols, count)
-
     passwords = [generate_password(length, uppercase, lowercase, numbers, symbols, exclude_similar) for _ in range(count)]
     strength_info = calculate_strength(passwords[0])
-
     logger.info("Generated %d password(s) | length=%d | ip=%s", count, length, get_remote_address(request))
-
     return {
         "status": "success",
         "passwords": passwords,
@@ -58,8 +56,3 @@ def generate(
 @app.get("/")
 def root():
     return {"message": "SafeKey API is running. Visit /docs for Swagger UI."}
-
-
-# Vercel serverless handler
-from mangum import Mangum
-handler = Mangum(app)

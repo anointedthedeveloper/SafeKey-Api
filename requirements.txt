@@ -1,4 +1,3 @@
 fastapi
-mangum
 slowapi
 uvicorn
